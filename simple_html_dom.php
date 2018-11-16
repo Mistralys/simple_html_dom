@@ -112,30 +112,186 @@ function file_get_html($url, $use_include_path = false, $context=null, $offset =
 	// stop processing if the header isn't a good responce
   	if (isset($http_response_header) && strpos($http_response_header[0], '200') === false)
 	{
+		simple_html_dom_settings::set(
+            '__error', 
+            new simple_html_dom_error(
+                sprintf(
+					'Wrong response code [%s] returned while loading the document from [%s]',
+					$http_response_header[0],
+					$url
+				),
+                1003
+            )
+        );
+		
   		return false;
   	}	
 	
-	// stop processing if the contents are too big
-    if (empty($contents) || strlen($contents) > MAX_FILE_SIZE)
+    if (empty($contents))
     {
+        $dom->clear();
+        
+        simple_html_dom_settings::set(
+            '__error', 
+            new simple_html_dom_error(
+                'Empty HTML string',
+                1001
+            )
+        );
+        
         return false;
     }
+
+    $maxSize = simple_html_dom_settings::getMaxFilesize();
+    if (strlen($contents) > $maxSize)
+    {
+        $dom->clear();
+        
+        simple_html_dom_settings::set(
+            '__error',
+            new simple_html_dom_error(
+                sprintf(
+                    'The HTML string extends the max size of [%s]. This can be increased using simple_html_dom_settings::setMaxFilesize().',
+                    $maxSize
+                    ),
+                1002
+            )
+        );
+        
+        return false;
+    }
+
     // The second parameter can force the selectors to all be lowercase.
     $dom->load($contents, $lowercase, $stripRN);
     return $dom;
 }
 
-// get html dom from string
+/**
+ * @param string $str The HTML to parse
+ * @param string $lowercase
+ * @param string $forceTagsClosed
+ * @param string $target_charset
+ * @param string $stripRN
+ * @param string $defaultBRText
+ * @param string $defaultSpanText
+ * @return simple_html_dom|bool
+ */
 function str_get_html($str, $lowercase=true, $forceTagsClosed=true, $target_charset = DEFAULT_TARGET_CHARSET, $stripRN=true, $defaultBRText=DEFAULT_BR_TEXT, $defaultSpanText=DEFAULT_SPAN_TEXT)
 {
     $dom = new simple_html_dom(null, $lowercase, $forceTagsClosed, $target_charset, $stripRN, $defaultBRText, $defaultSpanText);
-    if (empty($str) || strlen($str) > MAX_FILE_SIZE)
+    if (empty($str))
     {
         $dom->clear();
+        
+        simple_html_dom_settings::set(
+            '__error', 
+            new simple_html_dom_error(
+                'Empty HTML string',
+                1001
+            )
+        );
+        
         return false;
     }
+
+    $maxSize = simple_html_dom_settings::getMaxFilesize();
+    if (strlen($str) > $maxSize)
+    {
+        $dom->clear();
+        
+        simple_html_dom_settings::set(
+            '__error',
+            new simple_html_dom_error(
+                sprintf(
+                    'The HTML string extends the max size of [%s]. This can be increased using simple_html_dom_settings::setMaxFilesize().',
+                    $maxSize
+                    ),
+                1002
+            )
+        );
+        
+        return false;
+    }
+    
     $dom->load($str, $lowercase, $stripRN);
     return $dom;
+}
+
+/**
+ * Retrieves information about the last error that occurred, if any.
+ * 
+ * @author Sebastian Mordziol <s.mordziol@mistralys.eu>
+ * @return simple_html_dom_error|NULL
+ */
+function simple_html_dom_get_error()
+{
+    return simple_html_dom_settings::get('__error');
+}
+
+/**
+ * Static class used to set global Simple HTML DOM settings.
+ * 
+ * @package simple_html_dom
+ * @author Sebastian Mordziol <s.mordziol@mistralys.eu>
+ */
+class simple_html_dom_settings
+{
+    protected static $settings = array(
+        'max-filesize' => MAX_FILE_SIZE
+    );
+    
+    public static function setMaxFilesize($bytes)
+    {
+        return self::set('max-filesize', $bytes);
+    }
+    
+    public static function getMaxFilesize()
+    {
+        return self::get('max-filesize');
+    }
+    
+    public static function set($name, $value)
+    {
+        self::$settings[$name] = $value;
+    }
+    
+    public static function get($name, $default=null)
+    {
+        if(isset(self::$settings[$name])) {
+            return self::$settings[$name];
+        }
+        
+        return $default;
+    }
+}
+
+/**
+ * Error class that is returned when parsing fails.
+ *  
+ * @package simple_html_dom
+ * @author Sebastian Mordziol <s.mordziol@mistralys.eu>
+ */
+class simple_html_dom_error
+{
+    protected $message;
+    
+    protected $code;
+    
+    public function __construct($message, $code)
+    {
+        $this->message = $message;
+        $this->code = $code;
+    }
+    
+    public function getMessage()
+    {
+        return $this->message;
+    }
+    
+    public function getCode()
+    {
+        return $this->code;
+    }
 }
 
 // dump html dom tree
