@@ -1,6 +1,6 @@
 This is a fork of samac's package for some quality of life enhancements.
 
-Original package: https://github.com/voku/simple_html_dom
+Original package: https://github.com/samaks/simple_html_dom
 
 **Note:** There is a revamped package from voku which improves the library a lot, but where the API has changed:
 
