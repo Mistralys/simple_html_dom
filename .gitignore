@@ -1,1 +1,4 @@
 /vendor
+/docs/agents/**/work.md
+/docs/agents/**/work/
+.phpunit.result.cache
