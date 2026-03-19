@@ -1,0 +1,5 @@
+# Simple HTMLDom Changelog
+
+## v1.6
+- Added error messages, retrievable with `simple_html_dom_get_error()`
+- Made it possible to set the max file size anytime using `simple_html_dom_settings::setMaxFilesize()`
