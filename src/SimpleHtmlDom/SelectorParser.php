@@ -23,7 +23,7 @@ class SelectorParser
      *
      * @return array<int, array<int, array{0: string, 1: string|null, 2: string|null, 3: string, 4: bool}>>
      */
-    public function parseSelector(string $selectorString): array
+    public function parse_selector(string $selectorString): array
     {
         // pattern of CSS selectors, modified from mootools
         // Paperg: Add the colon to the attribute, so that it properly finds <tag attr:ibute="something" > like google does.

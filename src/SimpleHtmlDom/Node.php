@@ -431,7 +431,7 @@ class Node
     public function find(string $selector, ?int $idx = null, bool $lowercase = false): Node|array|null
     {
         $selectorParser = new SelectorParser($this);
-        $selectors = $selectorParser->parseSelector($selector);
+        $selectors = $selectorParser->parse_selector($selector);
         if (($count = count($selectors)) === 0) {
             return [];
         }
@@ -502,7 +502,7 @@ class Node
     protected function parse_selector(string $selector_string, ?SelectorParser $parser = null): array
     {
         $parser ??= new SelectorParser($this);
-        return $parser->parseSelector($selector_string);
+        return $parser->parse_selector($selector_string);
     }
 
     public function __get(string $name): mixed
@@ -571,7 +571,7 @@ class Node
      */
     public static function is_utf8(mixed $str): bool
     {
-        return TextConverter::isUtf8($str);
+        return TextConverter::is_utf8($str);
     }
 
     /**

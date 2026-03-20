@@ -23,7 +23,7 @@ class TextConverter
 
         if (!empty($sourceCharset) && !empty($targetCharset) && (strcasecmp($sourceCharset, $targetCharset) !== 0)) {
             // Check if the reported encoding could have been incorrect and the text is actually already UTF-8
-            if ((strcasecmp($targetCharset, 'UTF-8') === 0) && self::isUtf8($text)) {
+            if ((strcasecmp($targetCharset, 'UTF-8') === 0) && self::is_utf8($text)) {
                 $converted = $text;
             } else {
                 $converted = iconv($sourceCharset, $targetCharset, $text);
@@ -48,7 +48,7 @@ class TextConverter
      *
      * @param mixed $str String to be tested
      */
-    public static function isUtf8(mixed $str): bool
+    public static function is_utf8(mixed $str): bool
     {
         $c = 0;
         $b = 0;

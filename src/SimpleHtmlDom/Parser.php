@@ -573,9 +573,9 @@ class Parser
 
         $space[2] = $this->copy_skip(self::TOKEN_BLANK);
         match ($this->char) {
-            '"'     => $this->parseDoubleQuotedAttr($node, $name),
-            "'"     => $this->parseSingleQuotedAttr($node, $name),
-            default => $this->parseUnquotedAttr($node, $name),
+            '"'     => $this->parse_double_quoted_attr($node, $name),
+            "'"     => $this->parse_single_quoted_attr($node, $name),
+            default => $this->parse_unquoted_attr($node, $name),
         };
         // PaperG: Attributes should not have \r or \n in them, that counts as html whitespace.
         $node->attr[$name] = str_replace("\r", "", $node->attr[$name]);
@@ -589,29 +589,29 @@ class Parser
     /**
      * Parse a double-quoted attribute value.
      */
-    private function parseDoubleQuotedAttr(Node $node, string $name): void
+    private function parse_double_quoted_attr(Node $node, string $name): void
     {
         $node->_[HDOM_INFO_QUOTE][] = HDOM_QUOTE_DOUBLE;
-        $this->char                 = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
+        $this->char                 = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null;
         $node->attr[$name]          = $this->restore_noise($this->copy_until_char_escape('"'));
-        $this->char                 = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
+        $this->char                 = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null;
     }
 
     /**
      * Parse a single-quoted attribute value.
      */
-    private function parseSingleQuotedAttr(Node $node, string $name): void
+    private function parse_single_quoted_attr(Node $node, string $name): void
     {
         $node->_[HDOM_INFO_QUOTE][] = HDOM_QUOTE_SINGLE;
-        $this->char                 = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
+        $this->char                 = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null;
         $node->attr[$name]          = $this->restore_noise($this->copy_until_char_escape("'"));
-        $this->char                 = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
+        $this->char                 = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null;
     }
 
     /**
      * Parse an unquoted attribute value.
      */
-    private function parseUnquotedAttr(Node $node, string $name): void
+    private function parse_unquoted_attr(Node $node, string $name): void
     {
         $node->_[HDOM_INFO_QUOTE][] = HDOM_QUOTE_NO;
         $node->attr[$name]          = $this->restore_noise($this->copy_until(self::TOKEN_ATTR));

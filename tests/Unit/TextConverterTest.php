@@ -10,30 +10,30 @@ use SimpleHtmlDom\TextConverter;
 class TextConverterTest extends TestCase
 {
     // -------------------------------------------------------------------------
-    // isUtf8
+    // is_utf8
     // -------------------------------------------------------------------------
 
     public function testIsUtf8WithAsciiString(): void
     {
-        $this->assertTrue(TextConverter::isUtf8('Hello, World!'));
+        $this->assertTrue(TextConverter::is_utf8('Hello, World!'));
     }
 
     public function testIsUtf8WithValidUtf8(): void
     {
         // Multi-byte UTF-8 characters.
-        $this->assertTrue(TextConverter::isUtf8("Héllo Wörld"));
+        $this->assertTrue(TextConverter::is_utf8("Héllo Wörld"));
     }
 
     public function testIsUtf8WithInvalidSequence(): void
     {
         // An invalid UTF-8 byte sequence (lone continuation byte).
-        $this->assertFalse(TextConverter::isUtf8("\x80"));
+        $this->assertFalse(TextConverter::is_utf8("\x80"));
     }
 
     public function testIsUtf8WithEmptyString(): void
     {
         // Empty string has no invalid bytes, so it's trivially valid UTF-8.
-        $this->assertTrue(TextConverter::isUtf8(''));
+        $this->assertTrue(TextConverter::is_utf8(''));
     }
 
     // -------------------------------------------------------------------------

@@ -29,13 +29,13 @@ class SelectorParserTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
-    // parseSelector
+    // parse_selector
     // -------------------------------------------------------------------------
 
     public function testParseSelectorSimpleTag(): void
     {
         $parser = $this->getParser();
-        $result = $parser->parseSelector('span');
+        $result = $parser->parse_selector('span');
         $this->assertCount(1, $result);        // one selector group
         $this->assertCount(1, $result[0]);     // one segment
         $this->assertSame('span', $result[0][0][0]); // tag
@@ -48,7 +48,7 @@ class SelectorParserTest extends TestCase
     public function testParseSelectorClassSelector(): void
     {
         $parser = $this->getParser();
-        $result = $parser->parseSelector('.foo');
+        $result = $parser->parse_selector('.foo');
         $this->assertCount(1, $result);
         $this->assertCount(1, $result[0]);
         $this->assertSame('class', $result[0][0][1]); // key = class
@@ -58,7 +58,7 @@ class SelectorParserTest extends TestCase
     public function testParseSelectorIdSelector(): void
     {
         $parser = $this->getParser();
-        $result = $parser->parseSelector('#bar');
+        $result = $parser->parse_selector('#bar');
         $this->assertCount(1, $result);
         $this->assertCount(1, $result[0]);
         $this->assertSame('id', $result[0][0][1]);  // key = id
@@ -68,7 +68,7 @@ class SelectorParserTest extends TestCase
     public function testParseSelectorAttributeSelector(): void
     {
         $parser = $this->getParser();
-        $result = $parser->parseSelector('a[href]');
+        $result = $parser->parse_selector('a[href]');
         $this->assertCount(1, $result);
         $this->assertCount(1, $result[0]);
         $this->assertSame('a', $result[0][0][0]);     // tag = a
@@ -78,7 +78,7 @@ class SelectorParserTest extends TestCase
     public function testParseSelectorAttributeValueSelector(): void
     {
         $parser = $this->getParser();
-        $result = $parser->parseSelector('input[type=text]');
+        $result = $parser->parse_selector('input[type=text]');
         $this->assertCount(1, $result);
         $this->assertSame('input', $result[0][0][0]);
         $this->assertSame('type', $result[0][0][1]);
@@ -89,7 +89,7 @@ class SelectorParserTest extends TestCase
     public function testParseSelectorNegatedAttribute(): void
     {
         $parser = $this->getParser();
-        $result = $parser->parseSelector('[!hidden]');
+        $result = $parser->parse_selector('[!hidden]');
         $this->assertCount(1, $result);
         // The '!' prefix is consumed; key becomes 'hidden' and no_key becomes true.
         $this->assertSame('hidden', $result[0][0][1]);
@@ -99,7 +99,7 @@ class SelectorParserTest extends TestCase
     public function testParseSelectorMultipleGroups(): void
     {
         $parser = $this->getParser();
-        $result = $parser->parseSelector('div, span');
+        $result = $parser->parse_selector('div, span');
         $this->assertCount(2, $result);
         $this->assertSame('div', $result[0][0][0]);
         $this->assertSame('span', $result[1][0][0]);
