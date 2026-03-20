@@ -2,3 +2,4 @@
 /docs/agents/**/work.md
 /docs/agents/**/work/
 .phpunit.result.cache
+/.claude/agent-memory
