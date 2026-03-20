@@ -146,8 +146,8 @@ HTML;
             '<<><<> + text'       => ["<<><<>ab  \n"],
             'incomplete abc tag'  => ["<abc\n\n"],
             'bare >'              => [">\n"],
-            // '(<1 mol%) \n' does NOT round-trip — library parses '<1 mol%' as a broken tag
-            // and drops the trailing content. Tested separately in testChemistryFormula().
+            // '(<1 mol%) \n' now round-trips correctly (tokeniser fix: '<digit' is plain text).
+            // Tested with round-trip assertion in testChemistryFormula().
         ];
     }
 
@@ -160,15 +160,15 @@ HTML;
     }
 
     /**
-     * The library does not round-trip strings containing '<' followed by digit-ish sequences
-     * that it treats as a broken tag opener. Verify it doesn't throw an exception.
+     * Strings containing '<' followed by a digit are plain text, not tag openers (HTML5 spec).
+     * After the tokeniser fix, '<1 mol%' round-trips correctly.
      */
     public function testChemistryFormula(): void
     {
         $str = "(<1 mol%) \n";
-        $this->dom->load($str);
-        // Should not throw; exact output is lib-specific (parser treats '<1' as broken tag)
-        $this->assertIsString((string) $this->dom);
+        $this->dom->load($str, true, false);
+        $this->assertEquals($str, (string) $this->dom);
+        $this->assertEquals($str, $this->dom->save());
     }
 
     // -------------------------------------------------------------------------

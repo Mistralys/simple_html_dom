@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class MiscTest extends TestCase
 {
-    private \simple_html_dom $dom;
+    private ?\simple_html_dom $dom = null;
 
     protected function setUp(): void
     {
@@ -17,8 +17,8 @@ class MiscTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->dom->clear();
-        unset($this->dom);
+        $this->dom?->clear();
+        $this->dom = null;
     }
 
     public function testLastElementFound(): void
@@ -58,18 +58,16 @@ class MiscTest extends TestCase
         <img class="class2" id="id2" src="src2"></a></div>
         HTML;
 
-        $dom = str_get_html($str, true, true, 'UTF-8', false);
-        $es = $dom->find('img');
+        $this->dom = str_get_html($str, true, true, 'UTF-8', false);
+        $es = $this->dom->find('img');
 
         $this->assertCount(3, $es);
         $this->assertEquals('src0', $es[0]->src);
         $this->assertEquals('src1', $es[1]->src);
         $this->assertEquals('src2', $es[2]->src);
 
-        $es = $dom->find('p');
+        $es = $this->dom->find('p');
         $this->assertEquals('p1', $es[0]->innertext);
-        $this->assertEquals($str, (string) $dom);
-
-        $dom->clear();
+        $this->assertEquals($str, (string) $this->dom);
     }
 }

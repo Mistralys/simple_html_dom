@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
  */
 class ReaderSelectorTest extends TestCase
 {
-    private \simple_html_dom $dom;
+    private ?\simple_html_dom $dom = null;
 
     protected function setUp(): void
     {
@@ -24,8 +24,8 @@ class ReaderSelectorTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->dom->clear();
-        unset($this->dom);
+        $this->dom?->clear();
+        $this->dom = null;
     }
 
     // -------------------------------------------------------------------------
@@ -261,14 +261,13 @@ class ReaderSelectorTest extends TestCase
             </tr>
         </table>
         HTML;
-        $dom = str_get_html($str, true, true, 'UTF-8', false);
-        $es = $dom->find('table.hello td');
+        $this->dom = str_get_html($str, true, true, 'UTF-8', false);
+        $es = $this->dom->find('table.hello td');
         $this->assertCount(4, $es);
         $this->assertEquals('0', $es[0]->innertext);
         $this->assertEquals('1', $es[1]->innertext);
         $this->assertEquals('2', $es[2]->innertext);
         $this->assertEquals('3', $es[3]->innertext);
-        $dom->clear();
     }
 
     public function testNestedSelectorWithLoop(): void
@@ -283,14 +282,14 @@ class ReaderSelectorTest extends TestCase
             <li>3</li>
         </ul>
         HTML;
-        $dom = str_get_html($str, true, true, 'UTF-8', false);
-        $es = $dom->find('ul');
+        $this->dom = str_get_html($str, true, true, 'UTF-8', false);
+        $es = $this->dom->find('ul');
         $this->assertCount(2, $es);
         foreach ($es as $n) {
             $this->assertCount(2, $n->find('li'));
         }
 
-        $es = $dom->find('li');
+        $es = $this->dom->find('li');
         $this->assertCount(4, $es);
         $this->assertEquals('0', $es[0]->innertext);
         $this->assertEquals('1', $es[1]->innertext);
@@ -302,14 +301,13 @@ class ReaderSelectorTest extends TestCase
         $this->assertEquals('<li>3</li>', $es[3]->outertext);
 
         $counter = 0;
-        foreach ($dom->find('ul') as $ul) {
+        foreach ($this->dom->find('ul') as $ul) {
             foreach ($ul->find('li') as $li) {
                 $this->assertEquals("$counter", $li->innertext);
                 $this->assertEquals("<li>$counter</li>", $li->outertext);
                 ++$counter;
             }
         }
-        $dom->clear();
     }
 
     // -------------------------------------------------------------------------

@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
  */
 class InvalidHtmlTest extends TestCase
 {
-    private \simple_html_dom $dom;
+    private ?\simple_html_dom $dom = null;
 
     protected function setUp(): void
     {
@@ -22,8 +22,8 @@ class InvalidHtmlTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->dom->clear();
-        unset($this->dom);
+        $this->dom?->clear();
+        $this->dom = null;
     }
 
     // -------------------------------------------------------------------------
@@ -103,16 +103,15 @@ class InvalidHtmlTest extends TestCase
 <tr><td>1<td>2<td>3
 </table>
 HTML;
-        $dom = str_get_html($str, true, true, 'UTF-8', false);
-        $this->assertEquals($str, (string) $dom);
-        $this->assertCount(3, $dom->find('td'));
-        $this->assertEquals('1', $dom->find('td', 0)->innertext);
-        $this->assertEquals('<td>1', $dom->find('td', 0)->outertext);
-        $this->assertEquals('2', $dom->find('td', 1)->innertext);
-        $this->assertEquals('<td>2', $dom->find('td', 1)->outertext);
-        $this->assertEquals("3\n", $dom->find('td', 2)->innertext);
-        $this->assertEquals("<td>3\n", $dom->find('td', 2)->outertext);
-        $dom->clear();
+        $this->dom = str_get_html($str, true, true, 'UTF-8', false);
+        $this->assertEquals($str, (string) $this->dom);
+        $this->assertCount(3, $this->dom->find('td'));
+        $this->assertEquals('1', $this->dom->find('td', 0)->innertext);
+        $this->assertEquals('<td>1', $this->dom->find('td', 0)->outertext);
+        $this->assertEquals('2', $this->dom->find('td', 1)->innertext);
+        $this->assertEquals('<td>2', $this->dom->find('td', 1)->outertext);
+        $this->assertEquals("3\n", $this->dom->find('td', 2)->innertext);
+        $this->assertEquals("<td>3\n", $this->dom->find('td', 2)->outertext);
     }
 
     public function testOptionalClosingTagsTdInFullTable(): void
@@ -125,9 +124,8 @@ HTML;
     <td><b>3</b></td>
 </table>
 HTML;
-        $dom = str_get_html($str, true, true, 'UTF-8', false);
-        $this->assertCount(3, $dom->find('tr td'));
-        $dom->clear();
+        $this->dom = str_get_html($str, true, true, 'UTF-8', false);
+        $this->assertCount(3, $this->dom->find('tr td'));
     }
 
     public function testOptionalClosingTagsMultiRow(): void
@@ -138,13 +136,12 @@ HTML;
 <tr><td><b>21</b></td><td><b>32</b></td><td><b>43</b></td>
 </table>
 HTML;
-        $dom = str_get_html($str, true, true, 'UTF-8', false);
-        $this->assertCount(2, $dom->find('tr'));
-        $this->assertCount(6, $dom->find('tr td'));
-        $this->assertEquals("<tr><td><b>21</b></td><td><b>32</b></td><td><b>43</b></td>\n", $dom->find('tr', 1)->outertext);
-        $this->assertEquals("<td><b>21</b></td><td><b>32</b></td><td><b>43</b></td>\n", $dom->find('tr', 1)->innertext);
-        $this->assertEquals("213243\n", $dom->find('tr', 1)->plaintext);
-        $dom->clear();
+        $this->dom = str_get_html($str, true, true, 'UTF-8', false);
+        $this->assertCount(2, $this->dom->find('tr'));
+        $this->assertCount(6, $this->dom->find('tr td'));
+        $this->assertEquals("<tr><td><b>21</b></td><td><b>32</b></td><td><b>43</b></td>\n", $this->dom->find('tr', 1)->outertext);
+        $this->assertEquals("<td><b>21</b></td><td><b>32</b></td><td><b>43</b></td>\n", $this->dom->find('tr', 1)->innertext);
+        $this->assertEquals("213243\n", $this->dom->find('tr', 1)->plaintext);
     }
 
     // -------------------------------------------------------------------------
@@ -153,15 +150,14 @@ HTML;
     public function testOptionalClosingTagsP(): void
     {
         $str = "<p>1\r\n<p>2</p>\r\n<p>3";
-        $dom = str_get_html($str, true, true, 'UTF-8', false);
-        $this->assertCount(3, $dom->find('p'));
-        $this->assertEquals("1\r\n", $dom->find('p', 0)->innertext);
-        $this->assertEquals("<p>1\r\n", $dom->find('p', 0)->outertext);
-        $this->assertEquals('2', $dom->find('p', 1)->innertext);
-        $this->assertEquals('<p>2</p>', $dom->find('p', 1)->outertext);
-        $this->assertEquals('3', $dom->find('p', 2)->innertext);
-        $this->assertEquals('<p>3', $dom->find('p', 2)->outertext);
-        $dom->clear();
+        $this->dom = str_get_html($str, true, true, 'UTF-8', false);
+        $this->assertCount(3, $this->dom->find('p'));
+        $this->assertEquals("1\r\n", $this->dom->find('p', 0)->innertext);
+        $this->assertEquals("<p>1\r\n", $this->dom->find('p', 0)->outertext);
+        $this->assertEquals('2', $this->dom->find('p', 1)->innertext);
+        $this->assertEquals('<p>2</p>', $this->dom->find('p', 1)->outertext);
+        $this->assertEquals('3', $this->dom->find('p', 2)->innertext);
+        $this->assertEquals('<p>3', $this->dom->find('p', 2)->outertext);
     }
 
     // -------------------------------------------------------------------------
@@ -170,15 +166,14 @@ HTML;
     public function testOptionalClosingTagsNobr(): void
     {
         $str = "<nobr>1\r\n<nobr>2</nobr>\r\n<nobr>3";
-        $dom = str_get_html($str, true, true, 'UTF-8', false);
-        $this->assertCount(3, $dom->find('nobr'));
-        $this->assertEquals("1\r\n", $dom->find('nobr', 0)->innertext);
-        $this->assertEquals("<nobr>1\r\n", $dom->find('nobr', 0)->outertext);
-        $this->assertEquals('2', $dom->find('nobr', 1)->innertext);
-        $this->assertEquals('<nobr>2</nobr>', $dom->find('nobr', 1)->outertext);
-        $this->assertEquals('3', $dom->find('nobr', 2)->innertext);
-        $this->assertEquals('<nobr>3', $dom->find('nobr', 2)->outertext);
-        $dom->clear();
+        $this->dom = str_get_html($str, true, true, 'UTF-8', false);
+        $this->assertCount(3, $this->dom->find('nobr'));
+        $this->assertEquals("1\r\n", $this->dom->find('nobr', 0)->innertext);
+        $this->assertEquals("<nobr>1\r\n", $this->dom->find('nobr', 0)->outertext);
+        $this->assertEquals('2', $this->dom->find('nobr', 1)->innertext);
+        $this->assertEquals('<nobr>2</nobr>', $this->dom->find('nobr', 1)->outertext);
+        $this->assertEquals('3', $this->dom->find('nobr', 2)->innertext);
+        $this->assertEquals('<nobr>3', $this->dom->find('nobr', 2)->outertext);
     }
 
     // -------------------------------------------------------------------------
@@ -187,29 +182,27 @@ HTML;
     public function testOptionalClosingTagsDtDd(): void
     {
         $str = '<dl><dt>1<dd>2<dt>3<dd>4</dl>';
-        $dom = str_get_html($str, true, true, 'UTF-8', false);
-        $this->assertCount(2, $dom->find('dt'));
-        $this->assertCount(2, $dom->find('dd'));
-        $this->assertEquals('1', $dom->find('dt', 0)->innertext);
-        $this->assertEquals('<dt>1', $dom->find('dt', 0)->outertext);
-        $this->assertEquals('3', $dom->find('dt', 1)->innertext);
-        $this->assertEquals('<dt>3', $dom->find('dt', 1)->outertext);
-        $this->assertEquals('2', $dom->find('dd', 0)->innertext);
-        $this->assertEquals('<dd>2', $dom->find('dd', 0)->outertext);
-        $this->assertEquals('4', $dom->find('dd', 1)->innertext);
-        $this->assertEquals('<dd>4', $dom->find('dd', 1)->outertext);
-        $dom->clear();
+        $this->dom = str_get_html($str, true, true, 'UTF-8', false);
+        $this->assertCount(2, $this->dom->find('dt'));
+        $this->assertCount(2, $this->dom->find('dd'));
+        $this->assertEquals('1', $this->dom->find('dt', 0)->innertext);
+        $this->assertEquals('<dt>1', $this->dom->find('dt', 0)->outertext);
+        $this->assertEquals('3', $this->dom->find('dt', 1)->innertext);
+        $this->assertEquals('<dt>3', $this->dom->find('dt', 1)->outertext);
+        $this->assertEquals('2', $this->dom->find('dd', 0)->innertext);
+        $this->assertEquals('<dd>2', $this->dom->find('dd', 0)->outertext);
+        $this->assertEquals('4', $this->dom->find('dd', 1)->innertext);
+        $this->assertEquals('<dd>4', $this->dom->find('dd', 1)->outertext);
     }
 
     public function testOptionalClosingTagsMultipleDlLists(): void
     {
         $str = "<dl id=\"dl1\"><dt>11<dd>12<dt>13<dd>14</dl>\r\n<dl id=\"dl2\"><dt>21<dd>22<dt>23<dd>24</dl>";
-        $dom = str_get_html($str, true, true, 'UTF-8', false);
-        $this->assertCount(2, $dom->find('#dl1 dt'));
-        $this->assertCount(2, $dom->find('#dl2  dd'));
-        $this->assertEquals('<dt>11<dd>12<dt>13<dd>14', $dom->find('dl', 0)->innertext);
-        $this->assertEquals('<dt>21<dd>22<dt>23<dd>24', $dom->find('dl', 1)->innertext);
-        $dom->clear();
+        $this->dom = str_get_html($str, true, true, 'UTF-8', false);
+        $this->assertCount(2, $this->dom->find('#dl1 dt'));
+        $this->assertCount(2, $this->dom->find('#dl2  dd'));
+        $this->assertEquals('<dt>11<dd>12<dt>13<dd>14', $this->dom->find('dl', 0)->innertext);
+        $this->assertEquals('<dt>21<dd>22<dt>23<dd>24', $this->dom->find('dl', 1)->innertext);
     }
 
     // -------------------------------------------------------------------------
@@ -218,9 +211,8 @@ HTML;
     public function testOptionalClosingTagsLi(): void
     {
         $str = '<ul id="ul1"><li><b>1</b><li><b>2</b></ul>' . "\r\n" . '<ul id="ul2"><li><b>3</b><li><b>4</b></ul>';
-        $dom = str_get_html($str, true, true, 'UTF-8', false);
-        $this->assertCount(2, $dom->find('ul[id=ul1] li'));
-        $dom->clear();
+        $this->dom = str_get_html($str, true, true, 'UTF-8', false);
+        $this->assertCount(2, $this->dom->find('ul[id=ul1] li'));
     }
 
     // -------------------------------------------------------------------------
@@ -432,9 +424,8 @@ HTML;
 </b><.b></a>
 </body>
 HTML;
-        $dom = str_get_html($str, true, true, 'UTF-8', false);
-        $this->assertEquals($str, $dom->find('body', 0)->outertext);
-        $dom->clear();
+        $this->dom = str_get_html($str, true, true, 'UTF-8', false);
+        $this->assertEquals($str, $this->dom->find('body', 0)->outertext);
     }
 
     public function testBodyWithUnclosedAnchors(): void
@@ -445,10 +436,9 @@ HTML;
         <a>foo</a>
         <a>foo2</a>
 HTML;
-        $dom = str_get_html($str, true, true, 'UTF-8', false);
-        $this->assertEquals($str, (string) $dom);
-        $this->assertEquals('foo2', $dom->find('html body a', 1)->innertext);
-        $dom->clear();
+        $this->dom = str_get_html($str, true, true, 'UTF-8', false);
+        $this->assertEquals($str, (string) $this->dom);
+        $this->assertEquals('foo2', $this->dom->find('html body a', 1)->innertext);
     }
 
     public function testBodyWithDivNoClose(): void
@@ -458,10 +448,9 @@ HTML;
 <div>
 </body>
 HTML;
-        $dom = str_get_html($str, true, true, 'UTF-8', false);
-        $this->assertEquals($str, (string) $dom);
-        $this->assertEquals($str, $dom->find('body', 0)->outertext);
-        $dom->clear();
+        $this->dom = str_get_html($str, true, true, 'UTF-8', false);
+        $this->assertEquals($str, (string) $this->dom);
+        $this->assertEquals($str, $this->dom->find('body', 0)->outertext);
     }
 
     public function testBodyWithDivAndStrayClose(): void
@@ -471,9 +460,8 @@ HTML;
 <div> </a> </div>
 </body>
 HTML;
-        $dom = str_get_html($str, true, true, 'UTF-8', false);
-        $this->assertEquals($str, $dom->find('body', 0)->outertext);
-        $dom->clear();
+        $this->dom = str_get_html($str, true, true, 'UTF-8', false);
+        $this->assertEquals($str, $this->dom->find('body', 0)->outertext);
     }
 
     public function testTableWithUnclosedRows(): void
@@ -486,9 +474,8 @@ HTML;
         <td><b>bb</b>
 </table>
 HTML;
-        $dom = str_get_html($str, true, true, 'UTF-8', false);
-        $this->assertEquals($str, (string) $dom);
-        $dom->clear();
+        $this->dom = str_get_html($str, true, true, 'UTF-8', false);
+        $this->assertEquals($str, (string) $this->dom);
     }
 
     // -------------------------------------------------------------------------

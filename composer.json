@@ -16,11 +16,22 @@
 		}
 	],
 	"autoload": {
-		"classmap": [
-            "src"
-        ],
+		"psr-4": {
+			"SimpleHtmlDom\\": "src/SimpleHtmlDom/"
+		},
 		"files": [
             "src/simple_html_dom.php"
         ]
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^12.0"
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Tests\\": "tests/"
+		}
+	},
+	"scripts": {
+		"test": "vendor/bin/phpunit"
 	}
 }
