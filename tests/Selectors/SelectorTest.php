@@ -625,6 +625,47 @@ class SelectorTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
+    // *= selector with regex metacharacters in the value (non-regex branch)
+
+    public function testContainsSelectorWithRegexMetacharacters(): void
+    {
+        // Attribute values that contain regex metacharacters must be treated
+        // as plain substrings, not as regex patterns. Without preg_quote() the
+        // patterns below would either throw a preg error or produce wrong results.
+        $this->dom->load(
+            '<a data-value="price(USD)">link1</a>' .
+            '<a data-value="price[EUR]">link2</a>' .
+            '<a data-value="rate+tax">link3</a>' .
+            '<a data-value="version.1">link4</a>' .
+            '<a data-value="unrelated">other</a>'
+        );
+
+        // Each selector should match exactly the one element whose attribute
+        // literally contains the metacharacter-laden substring.
+        $es = $this->dom->find('[data-value*="price(USD)"]');
+        $this->assertCount(1, $es);
+        $this->assertEquals('link1', $es[0]->innertext);
+
+        $es = $this->dom->find('[data-value*="price[EUR]"]');
+        $this->assertCount(1, $es);
+        $this->assertEquals('link2', $es[0]->innertext);
+
+        $es = $this->dom->find('[data-value*="rate+tax"]');
+        $this->assertCount(1, $es);
+        $this->assertEquals('link3', $es[0]->innertext);
+
+        $es = $this->dom->find('[data-value*="version.1"]');
+        $this->assertCount(1, $es);
+        $this->assertEquals('link4', $es[0]->innertext);
+
+        // Sanity check: a literal dot in the search string must NOT match an
+        // element whose attribute value contains a different character in that
+        // position (i.e. it must not behave as a regex wildcard).
+        $es = $this->dom->find('[data-value*="versionX1"]');
+        $this->assertCount(0, $es);
+    }
+
+    // -------------------------------------------------------------------------
     // Regex attribute selectors
 
     public function testRegexAttrSelector(): void
@@ -648,7 +689,10 @@ class SelectorTest extends TestCase
         </html>
         HTML;
         $this->dom->load($str);
-        $this->assertCount(1, $this->dom->find('div[id*=news-id-[0-9]+]'));
+        // Without a leading '/' delimiter the value is treated as a plain
+        // substring (preg_quote applied), so the metacharacter pattern does NOT
+        // match. Use the '/…/' form to pass a real regex.
+        $this->assertCount(0, $this->dom->find('div[id*=news-id-[0-9]+]'));
         $this->assertCount(1, $this->dom->find('div[id*=/news-id-[0-9]+/i]'));
     }
 

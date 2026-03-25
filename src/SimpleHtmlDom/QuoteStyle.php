@@ -14,5 +14,5 @@ enum QuoteStyle: int
 {
     case Double = 0;
     case Single = 1;
-    case None   = 3;
+    case None   = 3; // Value 2 is intentionally skipped to match the legacy HDOM_QUOTE_NO constant
 }

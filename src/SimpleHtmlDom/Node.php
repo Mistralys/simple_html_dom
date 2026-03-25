@@ -13,6 +13,9 @@ namespace SimpleHtmlDom;
  * PaperG - added ability for "find" routine to lowercase the value of the selector.
  * PaperG - added $tag_start to track the start position of the tag in the total byte index
  *
+ * @property-read string $plaintext Plain-text content of the node (delegates to text()).
+ * @property mixed $content  Dynamic HTML attribute — accessed via __get/__set.
+ *
  * @package SimpleHtmlDom
  */
 class Node

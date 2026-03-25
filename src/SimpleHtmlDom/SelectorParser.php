@@ -205,7 +205,7 @@ class SelectorParser
             '$=' => (bool) preg_match("/" . preg_quote($pattern, '/') . "$/", $value),
             '*=' => ($pattern[0] === '/')
                 ? (bool) preg_match($pattern, $value)
-                : (bool) preg_match("/" . $pattern . "/i", $value),
+                : (bool) preg_match("/" . preg_quote($pattern, '/') . "/i", $value),
             default => false,
         };
     }

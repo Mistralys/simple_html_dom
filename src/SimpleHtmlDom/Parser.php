@@ -295,7 +295,7 @@ class Parser
 
         if (empty($charset)) {
             $el = $this->root->find('meta[http-equiv=Content-Type]', 0);
-            if (!empty($el)) {
+            if ($el instanceof Node) {
                 $fullvalue = $el->content;
 
                 if (!empty($fullvalue)) {

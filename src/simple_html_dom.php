@@ -74,6 +74,7 @@ function file_get_html(string $url, bool $use_include_path = false, mixed $conte
     // We DO force the tags to be terminated.
     $dom = new simple_html_dom(null, $lowercase, $forceTagsClosed, $target_charset, $stripRN, $defaultBRText, $defaultSpanText);
 
+    $redirectHops = 0;
     do {
         $repeat = false;
         if ($context !== null) {
@@ -99,7 +100,9 @@ function file_get_html(string $url, bool $use_include_path = false, mixed $conte
             if (!empty($location_headers) && preg_match($pattern, array_values($location_headers)[0], $matches)) {
                 // set the URL to that returned via the redirect header and repeat this loop
                 $url    = $matches[1];
-                $repeat = true;
+                if (++$redirectHops < 5) {
+                    $repeat = true;
+                }
             }
         }
     } while ($repeat);
