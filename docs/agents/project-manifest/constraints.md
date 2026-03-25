@@ -23,6 +23,14 @@
 - Can be changed at runtime via `Settings::setMaxFilesize($bytes)`.
 - Both `file_get_html()` and `str_get_html()` enforce this limit before parsing.
 
+## URL Loading Security
+
+- `file_get_html()` and `Parser::load_file()` accept arbitrary URLs and pass them to `file_get_contents()`.
+- If consumer code passes user-supplied URLs, this creates a Server-Side Request Forgery (SSRF) surface.
+- Consumers **must** validate/whitelist URLs before passing them to these functions.
+- The library intentionally does not restrict URLs — that is the consumer's responsibility.
+- `file_get_html()` follows HTTP redirects up to a maximum of 5 hops to prevent infinite redirect loops.
+
 ## Error Handling
 
 - Parse-time errors (empty content, oversized content, bad HTTP response) are stored in the static `Settings` store under key `__error` as an `Error` object.

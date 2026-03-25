@@ -131,6 +131,13 @@ public string $outertext { get; set; }   // Virtual: delegates to outertext()/se
 public string $innertext { get; set; }   // Virtual: delegates to innertext()/sets HDOM_INFO_INNER or HDOM_INFO_TEXT
 ```
 
+### Magic Read-Only Properties (via `__get`)
+
+```php
+/** @property-read string $plaintext  Plain text content (strips tags); delegates to Node::text() */
+/** @property mixed $content          Alias for the node's raw text info (HDOM_INFO_TEXT) */
+```
+
 ### Constructor
 
 ```php

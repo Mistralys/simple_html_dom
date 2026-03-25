@@ -24,11 +24,13 @@ Consumer calls str_get_html($html)
 
 ```
 Consumer calls file_get_html($url)
-  → Bridge fetches content via file_get_contents(), following 301 redirects
+  → Bridge fetches content via file_get_contents(), following 301 redirects (max 5 hops)
   → Checks HTTP response headers via http_get_last_response_headers() (PHP 8.4)
   → On non-200 / empty / oversized: stores Error in Settings('__error'), returns false
   → Delegates to Parser::load() (same as flow #1)
 ```
+
+> **Redirect limit:** `file_get_html()` caps HTTP redirect following at 5 hops. This prevents infinite redirect loops while still handling normal multi-step redirects.
 
 ## 3. Find Elements by CSS Selector
 
