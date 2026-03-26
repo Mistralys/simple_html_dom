@@ -14,7 +14,7 @@
 |---|---|
 | Composer Name | `shark/simple_html_dom` |
 | Type | Library |
-| License | MIT (declared in source file header; no `LICENSE` file or `composer.json` field) |
+| License | MIT (declared in `composer.json` and `LICENSE` file) |
 | Origin | Fork of [samacs/simple_html_dom](https://github.com/samacs/simple_html_dom) (originally from SourceForge) |
 | Repository | `https://github.com/Mistralys/simple_html_dom.git` |
 
@@ -28,6 +28,9 @@
 ### Dev
 
 - `phpunit/phpunit` `^12.0`
+- `phpstan/phpstan` `^2.1`
+- `phpstan/phpstan-phpunit` `^2.0`
+- `roave/security-advisories` `dev-latest`
 
 ## Build & Package Management
 

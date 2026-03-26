@@ -94,7 +94,7 @@ class SelectorParser
      * Seek matching nodes within the subtree of $this->node.
      *
      * @param array{0: string, 1: string|null, 2: string|null, 3: string, 4: bool} $selector
-     * @param array<int, int> $ret Results accumulator (passed by reference)
+     * @param array<int, int> &$ret Results accumulator (passed by reference)
      */
     public function seek(array $selector, array &$ret, bool $lowercase = false): void
     {
@@ -106,7 +106,7 @@ class SelectorParser
             foreach ($this->node->children as $c) {
                 if ($tag === '*' || $tag === $c->tag) {
                     if (++$count == $key) {
-                        $ret[$c->_[HDOM_INFO_BEGIN]] = 1;
+                        $ret[(int) $c->_[HDOM_INFO_BEGIN]] = 1;
                         return;
                     }
                 }

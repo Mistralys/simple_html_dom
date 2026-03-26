@@ -15,6 +15,7 @@ namespace SimpleHtmlDom;
  */
 class Settings
 {
+    /** @var array<string, mixed> */
     protected static array $settings = [];
 
     public static function setMaxFilesize(int $bytes): void

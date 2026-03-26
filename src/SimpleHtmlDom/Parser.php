@@ -55,7 +55,9 @@ class Parser
     /** @var callable|null */
     public mixed $callback = null;
     public ?Node $root = null;
+    /** @var list<Node> */
     public array $nodes = [];
+    /** @var array<string, array<string, int>>|null */
     private ?array $optionalClosingArray = null;
     public bool $lowercase = false;
     // Used to keep track of how large the text was when we started.
@@ -66,6 +68,7 @@ class Parser
     protected ?string $char = null;
     protected int $cursor = 0;
     protected ?Node $parent = null;
+    /** @var array<string, string> */
     protected array $noise = [];
     // Note that this is referenced by a child node, and so it needs to be public for that node to see this information.
     public string $_charset = '';
@@ -181,6 +184,7 @@ class Parser
     /**
      * Find dom node by css selector.
      * Paperg - allow us to specify that we want case insensitive testing of the value of the selector.
+     * @return list<Node>|Node|null
      */
     public function find(string $selector, ?int $idx = null, bool $lowercase = false): Node|array|null
     {
@@ -562,8 +566,11 @@ class Parser
 
     /**
      * Parse attributes.
+     *
+     * @param array<int, string> &$space
      */
     protected function parse_attr(Node $node, string $name, array &$space): void
+
     {
         // Per sourceforge: http://sourceforge.net/tracker/?func=detail&aid=3061408&group_id=218559&atid=1044037
         // If the attribute is already defined inside a tag, only pay attention to the first one.
@@ -804,6 +811,10 @@ class Parser
     }
 
     // camelCase DOM API delegates
+    
+    /**
+     * @return list<Node>|Node|null
+     */
     public function childNodes(int $idx = -1): Node|array|null { return $this->root->childNodes($idx); }
     public function firstChild(): ?Node                        { return $this->root->first_child(); }
     public function lastChild(): ?Node                         { return $this->root->last_child(); }
@@ -819,8 +830,16 @@ class Parser
         return ($last instanceof Node) ? $last : false;
     }
     public function getElementById(string $id): ?Node           { return $this->find("#$id", 0); }
+    
+    /**
+     * @return list<Node>|Node|null
+     */
     public function getElementsById(string $id, ?int $idx = null): Node|array|null { return $this->find("#$id", $idx); }
     public function getElementByTagName(string $name): ?Node    { return $this->find($name, 0); }
+    
+    /**
+     * @return list<Node>|Node|null
+     */
     public function getElementsByTagName(string $name, int $idx = -1): Node|array|null { return $this->find($name, $idx); }
     public function loadFile(string ...$args): void { $this->load_file(...$args); }
 }

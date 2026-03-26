@@ -22,11 +22,17 @@ class Node
 {
     public int $nodetype = HDOM_TYPE_TEXT;
     public string $tag = 'text';
+    /** @var array<string, string|bool|null> */
     public array $attr = [];
+    /** @var list<Node>|null */
     public ?array $children = [];
+    /** @var list<Node>|null */
     public ?array $nodes = [];
     public ?Node $parent = null;
-    /** The "info" array — see HDOM_INFO_* for what each element contains. */
+    /**
+     * The "info" array — see HDOM_INFO_* for what each element contains.
+     * @var array<int, mixed>
+     */
     public array $_ = [];
     public int $tag_start = 0;
 
@@ -188,6 +194,7 @@ class Node
 
     /**
      * Returns children of node.
+     * @return list<Node>|Node|null
      */
     public function children(int $idx = -1): Node|array|null
     {
@@ -287,12 +294,17 @@ class Node
             return $this->_[HDOM_INFO_INNER];
         }
         if (isset($this->_[HDOM_INFO_TEXT])) {
+            if ($this->dom === null) {
+                return $this->_[HDOM_INFO_TEXT];
+            }
             return $this->dom->restore_noise($this->_[HDOM_INFO_TEXT]);
         }
 
         $ret = '';
-        foreach ($this->nodes as $n) {
-            $ret .= $n->outertext();
+        if ($this->nodes !== null) {
+            foreach ($this->nodes as $n) {
+                $ret .= $n->outertext();
+            }
         }
         return $ret;
     }
@@ -315,11 +327,14 @@ class Node
             return $this->_[HDOM_INFO_OUTER];
         }
         if (isset($this->_[HDOM_INFO_TEXT])) {
+            if ($this->dom === null) {
+                return $this->_[HDOM_INFO_TEXT];
+            }
             return $this->dom->restore_noise($this->_[HDOM_INFO_TEXT]);
         }
 
         // render begin tag
-        if ($this->dom && $this->dom->nodes[$this->_[HDOM_INFO_BEGIN]]) {
+        if ($this->dom && isset($this->dom->nodes[$this->_[HDOM_INFO_BEGIN]])) {
             $ret = $this->dom->nodes[$this->_[HDOM_INFO_BEGIN]]->makeup();
         } else {
             $ret = "";
@@ -355,7 +370,11 @@ class Node
             return $this->_[HDOM_INFO_INNER];
         }
         switch ($this->nodetype) {
-            case HDOM_TYPE_TEXT:    return $this->dom->restore_noise($this->_[HDOM_INFO_TEXT]);
+            case HDOM_TYPE_TEXT:
+                if ($this->dom === null) {
+                    return $this->_[HDOM_INFO_TEXT];
+                }
+                return $this->dom->restore_noise($this->_[HDOM_INFO_TEXT]);
             case HDOM_TYPE_COMMENT: return '';
             case HDOM_TYPE_UNKNOWN: return '';
         }
@@ -374,7 +393,7 @@ class Node
             }
 
             // If this node is a span... add a space at the end of it so multiple spans don't run into each other.
-            if ($this->tag == "span") {
+            if ($this->tag == "span" && $this->dom !== null) {
                 $ret .= $this->dom->default_span_text;
             }
         }
@@ -396,6 +415,9 @@ class Node
     {
         // text, comment, unknown
         if (isset($this->_[HDOM_INFO_TEXT])) {
+            if ($this->dom === null) {
+                return $this->_[HDOM_INFO_TEXT];
+            }
             return $this->dom->restore_noise($this->_[HDOM_INFO_TEXT]);
         }
 
@@ -423,6 +445,10 @@ class Node
                 $ret .= $key . $this->_[HDOM_INFO_SPACE][$i][1] . '=' . $this->_[HDOM_INFO_SPACE][$i][2] . $quote . $val . $quote;
             }
         }
+        
+        if ($this->dom === null) {
+            return $ret . $this->_[HDOM_INFO_ENDSPACE] . '>';
+        }
         $ret = $this->dom->restore_noise($ret);
         return $ret . $this->_[HDOM_INFO_ENDSPACE] . '>';
     }
@@ -430,6 +456,7 @@ class Node
     /**
      * Find elements by CSS selector.
      * PaperG - added ability for find to lowercase the value of the selector.
+     * @return list<Node>|Node|null
      */
     public function find(string $selector, ?int $idx = null, bool $lowercase = false): Node|array|null
     {
@@ -438,6 +465,7 @@ class Node
         if (($count = count($selectors)) === 0) {
             return [];
         }
+        /** @var array<int, int> */
         $found_keys = [];
 
         // find each selector
@@ -449,10 +477,12 @@ class Node
                 return [];
             }
 
+            /** @var array<int, int> */
             $head = [$this->_[HDOM_INFO_BEGIN] => 1];
 
             // handle descendant selectors, no recursive!
             for ($l = 0; $l < $levle; ++$l) {
+                /** @var array<int, int> */
                 $ret = [];
                 foreach ($head as $k => $v) {
                     $n = ($k === -1) ? $this->dom->root : $this->dom->nodes[$k];
@@ -488,6 +518,9 @@ class Node
 
     /**
      * Seek for given conditions.
+     *
+     * @param list<mixed> $selector
+     * @param array<int, int> &$ret
      * PaperG - added parameter to allow for case insensitive testing of the value of a selector.
      */
     protected function seek(array $selector, array &$ret, bool $lowercase = false, ?SelectorParser $parser = null): void
@@ -502,6 +535,9 @@ class Node
         return $parser->match($exp, $pattern, $value);
     }
 
+    /**
+     * @return array<int, array<int, array{0: string, 1: string|null, 2: string|null, 3: string, 4: bool}>>
+     */
     protected function parse_selector(string $selector_string, ?SelectorParser $parser = null): array
     {
         $parser ??= new SelectorParser($this);
@@ -582,7 +618,7 @@ class Node
      * NOTE: This will ONLY work on an IMG tag. Returns FALSE on all other tag types.
      *
      * @author John Schlick
-     * @return array|false An array containing 'height' and 'width' or false for non-img tags.
+     * @return array{height: int, width: int}|false An array containing 'height' and 'width' or false for non-img tags.
      */
     public function get_display_size(): array|false
     {
@@ -633,16 +669,32 @@ class Node
     }
 
     // camelCase DOM API delegates
+    
+    /**
+     * @return array<string, string|bool|null>
+     */
     public function getAllAttributes(): array           { return $this->attr; }
     public function getAttribute(string $name): mixed  { return $this->__get($name); }
     public function setAttribute(string $name, mixed $value): void { $this->__set($name, $value); }
     public function hasAttribute(string $name): bool   { return $this->__isset($name); }
-    public function removeAttribute(string $name): void { $this->__set($name, null); }
+    public function removeAttribute(string $name): void { $this->__unset($name); }
     public function getElementById(string $id): ?Node  { return $this->find("#$id", 0); }
+    
+    /**
+     * @return list<Node>|Node|null
+     */
     public function getElementsById(string $id, ?int $idx = null): Node|array|null { return $this->find("#$id", $idx); }
     public function getElementByTagName(string $name): ?Node { return $this->find($name, 0); }
+    
+    /**
+     * @return list<Node>|Node|null
+     */
     public function getElementsByTagName(string $name, ?int $idx = null): Node|array|null { return $this->find($name, $idx); }
     public function parentNode(): ?Node                { return $this->parent(); }
+    
+    /**
+     * @return list<Node>|Node|null
+     */
     public function childNodes(int $idx = -1): Node|array|null { return $this->children($idx); }
     public function firstChild(): ?Node                { return $this->first_child(); }
     public function lastChild(): ?Node                 { return $this->last_child(); }

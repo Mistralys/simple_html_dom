@@ -42,6 +42,12 @@
 - PHP circular references between `Parser`, `Node`, and child nodes cause memory leaks. Always call `$dom->clear()` when done, or ensure the `Parser` goes out of scope (the destructor calls `clear()`).
 - `Node::clear()` nulls out `$dom`, `$nodes`, `$parent`, `$children`.
 
+## Post-Clear Behavior
+
+- After `Node::clear()` or `Parser::clear()` is called, the node's `$dom` reference is set to `null`.
+- Accessing `innertext()`, `outertext()`, `text()`, or `makeup()` on a cleared node returns raw text without noise restoration.
+- Consumers should not rely on node output after calling `clear()` — treat it as end-of-lifecycle.
+
 ## Noise Handling
 
 - Before parsing, the tokeniser strips comments, CDATA, `<script>`, `<style>`, `<code>`, PHP tags, and Smarty tags into a `$noise[]` array keyed by placeholder strings (`___noise___XXXXX`).

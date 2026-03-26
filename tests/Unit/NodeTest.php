@@ -175,4 +175,41 @@ class NodeTest extends TestCase
         // dump() echoes the tag tree; at minimum it should not throw and should produce output
         $this->assertIsString($output);
     }
+
+    public function testRemoveAttribute(): void
+    {
+        $p = $this->parse('<div class="test" id="main"></div>');
+        $node = $p->find('div', 0);
+        $this->assertInstanceOf(Node::class, $node);
+
+        $node->removeAttribute('class');
+        
+        $this->assertFalse(isset($node->attr['class']));
+        $this->assertTrue(isset($node->attr['id']));
+        
+        $makeup = $node->makeup();
+        $this->assertStringNotContainsString('class', $makeup);
+        $this->assertStringContainsString('id="main"', $makeup);
+    }
+
+    public function testPostClearAccess(): void
+    {
+        $p = $this->parse('<p>text</p>');
+        $node = $p->find('p', 0);
+        $this->assertInstanceOf(Node::class, $node);
+
+        $node->clear();
+
+        // The exact return depends on context, but it must not crash (fatal error)
+        // when $this->dom is null
+        $inner = $node->innertext();
+        $outer = $node->outertext();
+        $text = $node->text();
+        $makeup = $node->makeup();
+
+        $this->assertIsString($inner);
+        $this->assertIsString($outer);
+        $this->assertIsString($text);
+        $this->assertIsString($makeup);
+    }
 }

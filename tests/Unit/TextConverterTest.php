@@ -91,4 +91,12 @@ class TextConverterTest extends TestCase
         $result = TextConverter::convert($text, '', '');
         $this->assertSame($text, $result);
     }
+
+    public function testConvertWithIconvFailureFallback(): void
+    {
+        $text = 'Hello';
+        // Suppress warning from iconv() so test passes cleanly
+        $result = @TextConverter::convert($text, 'INVALID-CHARSET-XYZ', 'UTF-8');
+        $this->assertSame($text, $result);
+    }
 }

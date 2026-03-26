@@ -26,7 +26,10 @@ class TextConverter
             if ((strcasecmp($targetCharset, 'UTF-8') === 0) && self::is_utf8($text)) {
                 $converted = $text;
             } else {
-                $converted = iconv($sourceCharset, $targetCharset, $text);
+                $result = iconv($sourceCharset, $targetCharset, $text);
+                if ($result !== false) {
+                    $converted = $result;
+                }
             }
         }
 
