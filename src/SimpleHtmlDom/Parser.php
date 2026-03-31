@@ -200,13 +200,6 @@ class Parser
             $n->clear();
             $n = null;
         }
-        // This add next line is documented in the sourceforge repository. 2977248 as a fix for ongoing memory leaks that occur even with the use of clear.
-        if (isset($this->children)) {
-            foreach ($this->children as $n) {
-                $n->clear();
-                $n = null;
-            }
-        }
         if (isset($this->parent)) {
             $this->parent->clear();
             $this->parent = null;
@@ -276,7 +269,7 @@ class Parser
         $node = new Node($this);
         ++$this->cursor;
         $node->_[HDOM_INFO_TEXT] = $s;
-        $this->link_nodes($node, false);
+        $this->link_nodes($node);
         return true;
     }
 
@@ -432,7 +425,7 @@ class Parser
             if ($this->char === '>') {
                 $node->_[HDOM_INFO_TEXT] .= '>';
             }
-            $this->link_nodes($node, true);
+            $this->link_nodes($node);
             $this->char = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
             return true;
         }
@@ -441,7 +434,7 @@ class Parser
         if (($pos = strpos($tag, '<')) !== false) {
             $tag = '<' . substr($tag, 0, -1);
             $node->_[HDOM_INFO_TEXT] = $tag;
-            $this->link_nodes($node, false);
+            $this->link_nodes($node);
             $this->char = $this->doc[--$this->pos]; // prev
             return true;
         }
@@ -452,14 +445,14 @@ class Parser
         if (!preg_match("/^[a-zA-Z][\w\-:]*$/", $tag)) {
             $node->_[HDOM_INFO_TEXT] = '<' . $tag . $this->copy_until('<>');
             if ($this->char === '<') {
-                $this->link_nodes($node, false);
+                $this->link_nodes($node);
                 return true;
             }
 
             if ($this->char === '>') {
                 $node->_[HDOM_INFO_TEXT] .= '>';
             }
-            $this->link_nodes($node, false);
+            $this->link_nodes($node);
             $this->char = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
             return true;
         }
@@ -500,7 +493,7 @@ class Parser
                 $node->_[HDOM_INFO_END]   = 0;
                 $node->_[HDOM_INFO_TEXT]  = '<' . $tag . $space[0] . $name;
                 $node->tag                = 'text';
-                $this->link_nodes($node, false);
+                $this->link_nodes($node);
                 return true;
             }
 
@@ -513,7 +506,7 @@ class Parser
                 $node->_[HDOM_INFO_TEXT] = substr($this->doc, $begin_tag_pos, $this->pos - $begin_tag_pos - 1);
                 $this->pos -= 2;
                 $this->char = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
-                $this->link_nodes($node, false);
+                $this->link_nodes($node);
                 return true;
             }
 
@@ -541,7 +534,7 @@ class Parser
             }
         } while ($this->char !== '>' && $this->char !== '/');
 
-        $this->link_nodes($node, true);
+        $this->link_nodes($node);
         $node->_[HDOM_INFO_ENDSPACE] = $space[0];
 
         // check self closing
@@ -627,13 +620,11 @@ class Parser
     /**
      * Link node's parent.
      */
-    protected function link_nodes(Node &$node, bool $is_child): void
+    protected function link_nodes(Node &$node): void
     {
-        $node->parent        = $this->parent;
+        $node->parent          = $this->parent;
         $this->parent->nodes[] = $node;
-        if ($is_child) {
-            $this->parent->children[] = $node;
-        }
+        $this->parent->invalidate_children_cache();
     }
 
     /**
@@ -644,7 +635,7 @@ class Parser
         $node = new Node($this);
         ++$this->cursor;
         $node->_[HDOM_INFO_TEXT] = '</' . $tag . '>';
-        $this->link_nodes($node, false);
+        $this->link_nodes($node);
         $this->char = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
         return true;
     }

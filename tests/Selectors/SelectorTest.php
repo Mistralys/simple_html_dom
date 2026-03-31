@@ -59,6 +59,76 @@ class SelectorTest extends TestCase
         $this->assertCount(0, $this->dom->find(' div  img  *'));
     }
 
+    /**
+     * Verifies wildcard descendant selectors with a deeply nested fixture.
+     * Ensures 'find("div *")' still returns only the direct children of <div>,
+     * not all descendants, even when the DOM contains multiple nesting levels.
+     */
+    public function testWildcardSelectorNestedFixture(): void
+    {
+        $str = <<<HTML
+        <div>
+            <p><span><em>deep</em></span></p>
+            <p><span>shallow</span></p>
+        </div>
+        HTML;
+        $this->dom->load($str);
+
+        // Bare '*' — direct children of root: only <div>.
+        $this->assertCount(1, $this->dom->find('*'));
+
+        // 'div *' — direct children of <div>: the two <p> elements only.
+        $results = $this->dom->find('div *');
+        $this->assertCount(2, $results);
+        foreach ($results as $node) {
+            $this->assertSame('p', $node->tag, 'div * must return only direct <p> children, not nested <span> or <em>');
+        }
+
+        // 'div p *' — direct children of each <p>: the two <span> elements.
+        $results = $this->dom->find('div p *');
+        $this->assertCount(2, $results);
+        foreach ($results as $node) {
+            $this->assertSame('span', $node->tag, 'div p * must return only direct <span> children, not nested <em>');
+        }
+
+        // 'div p span *' — direct children of each <span>: <em> in first <span>, nothing in second.
+        $results = $this->dom->find('div p span *');
+        $this->assertCount(1, $results, 'div p span * must return only the <em> (direct child of the first <span>)');
+        $this->assertSame('em', $results[0]->tag);
+    }
+
+    /**
+     * Verifies that an attribute-qualified universal selector ('*[attr]') follows
+     * the normal descendant-traversal path and returns ALL matching descendants,
+     * unlike the bare '*' which is restricted to direct children only.
+     *
+     * The 'tag === "*" && !$key' guard in SelectorParser::seek() is the condition
+     * that triggers the direct-children restriction. Adding an attribute key ($key
+     * is truthy) bypasses that guard, so '*[class]' behaves like any tagged selector
+     * and traverses the full subtree.
+     */
+    public function testAttributeQualifiedWildcardTraversesAllDescendants(): void
+    {
+        $str = <<<HTML
+        <div>
+            <p class="top"><span class="mid"><em class="deep">text</em></span></p>
+            <p>no-class</p>
+        </div>
+        HTML;
+        $this->dom->load($str);
+
+        // '*[class]' must find all elements with a class attribute at any depth.
+        $results = $this->dom->find('*[class]');
+        $this->assertCount(3, $results, '*[class] must traverse all descendants and return <p>, <span>, and <em>');
+        $tags = array_map(fn($n) => $n->tag, $results);
+        $this->assertContains('p',    $tags);
+        $this->assertContains('span', $tags);
+        $this->assertContains('em',   $tags);
+
+        // Contrast: bare '*' from the same root returns only the top-level <div>.
+        $this->assertCount(1, $this->dom->find('*'), 'bare * must still return only direct children of root');
+    }
+
     public function testTagSelector(): void
     {
         $str = <<<HTML

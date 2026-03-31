@@ -25,9 +25,42 @@ class Node
     /** @var array<string, string|bool|null> */
     public array $attr = [];
     /** @var list<Node>|null */
-    public ?array $children = [];
-    /** @var list<Node>|null */
     public ?array $nodes = [];
+
+    /**
+     * Lazy cache for the virtual children property.
+     * Reset to null whenever nodes[] is mutated.
+     * @var list<Node>|null
+     */
+    private ?array $_childrenCache = null;
+
+    /**
+     * Virtual property: element children derived from nodes[].
+     *
+     * Filters nodes[] to exclude text and end-tag nodes, returning only
+     * elements, comments, and unknown-type nodes — the same set that was
+     * previously maintained in a separate stored array.
+     *
+     * Uses a lazy-invalidation cache: the filter result is computed once
+     * and reused until nodes[] is mutated.
+     *
+     * @var list<Node>|null
+     */
+    public ?array $children {
+        get {
+            if ($this->nodes === null) {
+                return null;
+            }
+            if ($this->_childrenCache === null) {
+                $this->_childrenCache = array_values(
+                    array_filter($this->nodes, static fn(Node $n): bool =>
+                        $n->nodetype !== HDOM_TYPE_TEXT && $n->nodetype !== HDOM_TYPE_ENDTAG
+                    )
+                );
+            }
+            return $this->_childrenCache;
+        }
+    }
     public ?Node $parent = null;
     /**
      * The "info" array — see HDOM_INFO_* for what each element contains.
@@ -86,8 +119,8 @@ class Node
     {
         $this->dom = null;
         $this->nodes = null;
+        $this->_childrenCache = null;
         $this->parent = null;
-        $this->children = null;
     }
 
     /**
@@ -154,7 +187,6 @@ class Node
             $string .= ' NULL ';
         }
 
-        $string .= " children: " . count($this->children);
         $string .= " nodes: " . count($this->nodes);
         $string .= " tag_start: " . $this->tag_start;
         $string .= "\n";
@@ -169,19 +201,82 @@ class Node
 
     /**
      * Returns the parent of node.
-     * If a node is passed in, it will reset the parent of the current node to that one.
      */
-    public function parent(?Node $parent = null): ?Node
+    public function parent(): ?Node
     {
-        // I am SURE that this doesn't work properly.
-        // It fails to unset the current node from it's current parents nodes or children list first.
-        if ($parent !== null) {
-            $this->parent = $parent;
-            $this->parent->nodes[] = $this;
-            $this->parent->children[] = $this;
+        return $this->parent;
+    }
+
+    /**
+     * Append a child node to this node.
+     *
+     * Detaches the node from its previous parent (if any), attaches it to this
+     * node's children[] and nodes[] arrays, propagates the $dom reference, and
+     * rebuilds index positions so that find() can discover the appended subtree.
+     */
+    public function append_child(Node $node): Node
+    {
+        $node->detach_from_parent();
+
+        $node->parent = $this;
+        $this->nodes[] = $node;
+        $this->_childrenCache = null;
+
+        if ($this->dom !== null) {
+            $node->reindex_subtree($this->dom);
+
+            // Extend _[HDOM_INFO_END] up the ancestor chain so find() can reach the appended nodes.
+            $newEnd = count($this->dom->nodes);
+            $ancestor = $this;
+            while ($ancestor !== null) {
+                if (isset($ancestor->_[HDOM_INFO_END])) {
+                    if ($ancestor->_[HDOM_INFO_END] < $newEnd) {
+                        $ancestor->_[HDOM_INFO_END] = $newEnd;
+                    }
+                }
+                $ancestor = $ancestor->parent;
+            }
         }
 
-        return $this->parent;
+        return $node;
+    }
+
+    /**
+     * Detach this node from its current parent's nodes[] array.
+     * The parent's children property is virtual and auto-updates.
+     */
+    private function detach_from_parent(): void
+    {
+        if ($this->parent === null) {
+            return;
+        }
+
+        if ($this->parent->nodes !== null) {
+            $this->parent->nodes = array_values(
+                array_filter($this->parent->nodes, fn(Node $n): bool => $n !== $this)
+            );
+            $this->parent->_childrenCache = null;
+        }
+
+        $this->parent = null;
+    }
+
+    /**
+     * Recursively re-link $dom and assign new index positions in Parser::$nodes.
+     */
+    private function reindex_subtree(Parser $dom): void
+    {
+        $this->dom = $dom;
+        $this->_[HDOM_INFO_BEGIN] = count($dom->nodes);
+        $dom->nodes[] = $this;
+
+        if ($this->nodes !== null) {
+            foreach ($this->nodes as $child) {
+                $child->reindex_subtree($dom);
+            }
+        }
+
+        $this->_[HDOM_INFO_END] = count($dom->nodes);
     }
 
     /**
@@ -198,13 +293,11 @@ class Node
      */
     public function children(int $idx = -1): Node|array|null
     {
+        $children = $this->children;
         if ($idx === -1) {
-            return $this->children;
+            return $children;
         }
-        if (isset($this->children[$idx])) {
-            return $this->children[$idx];
-        }
-        return null;
+        return $children[$idx] ?? null;
     }
 
     /**
@@ -238,15 +331,16 @@ class Node
             return null;
         }
 
+        $siblings = $this->parent->children ?? [];
+        $count = count($siblings);
         $idx = 0;
-        $count = count($this->parent->children ?? []);
-        while ($idx < $count && $this !== $this->parent->children[$idx]) {
+        while ($idx < $count && $this !== $siblings[$idx]) {
             ++$idx;
         }
         if (++$idx >= $count) {
             return null;
         }
-        return $this->parent->children[$idx];
+        return $siblings[$idx];
     }
 
     /**
@@ -257,15 +351,16 @@ class Node
         if ($this->parent === null) {
             return null;
         }
+        $siblings = $this->parent->children ?? [];
+        $count = count($siblings);
         $idx = 0;
-        $count = count($this->parent->children ?? []);
-        while ($idx < $count && $this !== $this->parent->children[$idx]) {
+        while ($idx < $count && $this !== $siblings[$idx]) {
             ++$idx;
         }
         if (--$idx < 0) {
             return null;
         }
-        return $this->parent->children[$idx];
+        return $siblings[$idx];
     }
 
     /**
@@ -334,11 +429,7 @@ class Node
         }
 
         // render begin tag
-        if ($this->dom && isset($this->dom->nodes[$this->_[HDOM_INFO_BEGIN]])) {
-            $ret = $this->dom->nodes[$this->_[HDOM_INFO_BEGIN]]->makeup();
-        } else {
-            $ret = "";
-        }
+        $ret = $this->makeup();
 
         // render inner text
         if (isset($this->_[HDOM_INFO_INNER])) {
@@ -702,5 +793,18 @@ class Node
     public function previousSibling(): ?Node           { return $this->prev_sibling(); }
     public function hasChildNodes(): bool              { return $this->has_child(); }
     public function nodeName(): string                 { return $this->tag; }
-    public function appendChild(Node $node): Node      { $node->parent($this); return $node; }
+    public function appendChild(Node $node): Node      { return $this->append_child($node); }
+
+    /**
+     * Invalidate the lazy children cache.
+     *
+     * Must be called after externally mutating this node's nodes[] array.
+     * Internal Node methods handle this automatically.
+     */
+    public function invalidate_children_cache(): void
+    {
+        $this->_childrenCache = null;
+    }
+
+    public function invalidateChildrenCache(): void    { $this->invalidate_children_cache(); }
 }

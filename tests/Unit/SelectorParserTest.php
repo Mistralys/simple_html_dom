@@ -149,4 +149,42 @@ class SelectorParserTest extends TestCase
         $parser = $this->getParser();
         $this->assertFalse($parser->match('~=', 'foo', 'foo'));
     }
+
+    // -------------------------------------------------------------------------
+    // find('*') — direct-children-only behaviour (design deviation from CSS)
+    // -------------------------------------------------------------------------
+
+    /**
+     * find('*') returns only direct children of the context node, not all
+     * descendants. This is a known design deviation from CSS Selectors Level 3
+     * (where '*' matches all elements in the subtree) that has been present
+     * since the original S.C. Chen implementation and is preserved for
+     * backward compatibility.
+     *
+     * @see docs/agents/project-manifest/constraints.md — CSS Selector Limitations
+     */
+    public function testFindWildcardReturnsOnlyDirectChildren(): void
+    {
+        $dom = str_get_html('<div><p><span>X</span></p></div>');
+        $this->assertNotFalse($dom, 'str_get_html() must succeed');
+
+        // find('*') on the document root returns only the top-level <div>.
+        $all = $dom->find('*');
+        $this->assertCount(1, $all, 'find("*") must return only top-level elements (direct children of root)');
+        $this->assertSame('div', $all[0]->tag);
+
+        // find('*') on <div> returns only <p> — not <span>, which is nested deeper.
+        $div   = $dom->find('div', 0);
+        $divAll = $div->find('*');
+        $this->assertCount(1, $divAll, 'Node::find("*") must return only direct children of the context node');
+        $this->assertSame('p', $divAll[0]->tag);
+
+        // Contrast: find('span') on <div> DOES return nested descendants,
+        // confirming that the direct-children-only restriction is specific to '*'.
+        $spans = $div->find('span');
+        $this->assertCount(1, $spans, 'find("span") must traverse all descendants');
+        $this->assertSame('span', $spans[0]->tag);
+
+        $dom->clear();
+    }
 }

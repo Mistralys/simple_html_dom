@@ -100,10 +100,13 @@ class SelectorParser
     {
         [$tag, $key, $val, $exp, $no_key] = $selector;
 
+        // Cache the virtual children property once (it filters nodes[] on every access).
+        $children = $this->node->children;
+
         // xpath index
         if ($tag && $key && is_numeric($key)) {
             $count = 0;
-            foreach ($this->node->children as $c) {
+            foreach ($children as $c) {
                 if ($tag === '*' || $tag === $c->tag) {
                     if (++$count == $key) {
                         $ret[(int) $c->_[HDOM_INFO_BEGIN]] = 1;
@@ -130,7 +133,7 @@ class SelectorParser
             $pass = true;
 
             if ($tag === '*' && !$key) {
-                if (in_array($node, $this->node->children, true)) {
+                if (in_array($node, $children, true)) {
                     $ret[$i] = 1;
                 }
                 continue;

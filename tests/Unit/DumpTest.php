@@ -28,7 +28,6 @@ class DumpTest extends TestCase
         $this->assertStringContainsString('[href]', $result);
         $this->assertStringContainsString('href', $result);
         $this->assertStringContainsString('HDOM_INNER_INFO', $result);
-        $this->assertStringContainsString('children:', $result);
         $this->assertStringContainsString('nodes:', $result);
         $this->assertStringContainsString('tag_start:', $result);
     }
