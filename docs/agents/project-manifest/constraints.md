@@ -40,7 +40,8 @@
 ## Memory Management
 
 - PHP circular references between `Parser`, `Node`, and child nodes cause memory leaks. Always call `$dom->clear()` when done, or ensure the `Parser` goes out of scope (the destructor calls `clear()`).
-- `Node::clear()` nulls out `$dom`, `$nodes`, `$parent`, `$children`.
+- `Node::clear()` nulls out `$dom`, `$nodes`, `$parent`, and the children cache. The virtual `$children` property returns `null` automatically when `$nodes` is null.
+- The virtual `$children` property uses a lazy-invalidation cache. All internal mutation methods (`append_child()`, `detach_from_parent()`, `clear()`, `Parser::link_nodes()`) invalidate the cache automatically. Consumer code that mutates `$node->nodes` directly must call `$node->invalidate_children_cache()` afterward.
 
 ## Post-Clear Behavior
 
@@ -58,6 +59,23 @@
 - Supports: tag, `#id`, `.class`, `[attr]`, `[attr=val]`, `[attr!=val]`, `[attr^=val]`, `[attr$=val]`, `[attr*=val]`, `[!attr]`, comma-separated groups, descendant combinators.
 - Does **not** support: child combinator (`>`), sibling combinators (`+`, `~`), pseudo-classes (`:nth-child`, `:not`, etc.), pseudo-elements.
 - `tbody` selectors are silently skipped (browser-generated XPath compatibility).
+- `find('*')` returns only **top-level elements** (direct children of the root), not all descendants. To iterate every element node in the document, use `$parser->nodes` filtered by `$node->nodetype === HDOM_TYPE_ELEMENT` (or the `HDOM_TYPE_ELEMENT` constant via the bridge). Universal-selector behaviour as defined in CSS Selectors Level 3 is not implemented.
+
+  **Design note:** This restriction has been present since S.C. Chen's original implementation. The `seek()` method in `SelectorParser` iterates all descendant nodes by index but applies an `in_array($node, $this->node->children)` guard specifically for the bare `*` selector (i.e., `$tag === '*' && !$key`). Any tagged selector (`find('span')`) or attribute-qualified universal selector (`find('*[class]')`) follows the normal descendant-traversal path and returns all matching descendants. The direct-children-only behaviour for bare `find('*')` is **preserved for backward compatibility** — existing consumers and tests depend on it.
+
+### tbody Workaround Pattern
+
+Because the parser treats `<tbody>` as transparent (silently skipped), descendant selectors like `find('tbody tr')` will **not** match. Use `find('tr')` directly and guard against header rows with a `th`-check:
+
+```php
+$rows = $dom->find('tr');
+foreach ($rows as $row) {
+    if ($row->find('th', 0)) {
+        continue; // skip header rows
+    }
+    // process data row
+}
+```
 
 ## Tag Parsing Rules
 
@@ -77,6 +95,7 @@
 
 - Tests use `Tests\` PSR-4 namespace mapped to `tests/`.
 - `Settings::reset()` should be called in `tearDown()` to avoid cross-test contamination.
+- **Behavior-documentation test classes** (those that prove a specific set of design decisions or non-obvious constraints) **must** include a class-level PHPDoc block listing all covered scenarios. Follow the pattern established in `tests/Unit/NodeBehaviorTest.php`. This does not apply to structural or regression tests that do not cover discrete named scenarios.
 
 ## Code Style
 

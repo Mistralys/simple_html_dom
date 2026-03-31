@@ -109,3 +109,25 @@ $dom->set_callback('my_func')
       → call_user_func_array($this->dom->callback, [$this])
       → Callback receives the Node, can modify it before rendering
 ```
+
+## 9. Error Handling
+
+```
+str_get_html($html) or file_get_html($url) called by consumer
+  → On failure:
+      → Settings::set('__error', new Error($message, $code))
+      → Returns false
+
+  Failure conditions and error codes:
+      → 1001 — HTML content is empty
+      → 1002 — HTML content exceeds Settings::getMaxFilesize() limit
+      → 1003 — HTTP response returned non-200 status code (file_get_html() only)
+
+Consumer detects false return value, then calls simple_html_dom_get_error()
+  → Returns Settings::get('__error')  →  Error|null
+
+Consumer inspects Error object:
+  → $error->getCode()     →  int   (1001 / 1002 / 1003)
+  → $error->getMessage()  →  string (human-readable description)
+  → (string) $error       →  "[{code}] {message}"
+```

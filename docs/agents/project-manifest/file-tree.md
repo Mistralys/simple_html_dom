@@ -35,25 +35,42 @@ simple_html_dom/
 │   │   ├── ReaderSelectorTest.php
 │   │   └── SelectorTest.php
 │   └── Unit/                  # Pure unit tests for namespaced classes (suite: unit)
+│       ├── AppendChildTest.php
 │       ├── DumpTest.php
 │       ├── ErrorTest.php
+│       ├── NodeBehaviorTest.php
 │       ├── NodeTest.php
 │       ├── ParserTest.php
 │       ├── SelectorParserTest.php
 │       ├── SettingsTest.php
 │       └── TextConverterTest.php
 │
-├── example/                   # Usage examples
-│   ├── example_advanced_selector.php
-│   ├── example_basic_selector.php
-│   ├── example_callback.php
-│   ├── example_extract_html.php
-│   ├── example_modify_contents.php
-│   ├── simple_html_dom_utility.php
-│   └── scraping/
-│       ├── example_scraping_digg.php
-│       ├── example_scraping_imdb.php
-│       └── example_scraping_slashdot.php
+├── examples/                  # Structured example library
+│   ├── _bootstrap.php         # Shared autoloader bootstrap for all examples
+│   ├── README.md              # Index and usage guide
+│   ├── 01-getting-started/
+│   │   ├── advanced_selectors.php
+│   │   ├── basic_selectors.php
+│   │   └── extract_text.php
+│   ├── 02-selectors/
+│   │   ├── attribute_selectors.php
+│   │   ├── negative_index.php
+│   │   └── text_nodes.php
+│   ├── 03-dom-navigation/
+│   │   ├── dom_api.php
+│   │   └── tree_traversal.php
+│   ├── 04-modifying-html/
+│   │   ├── attribute_manipulation.php
+│   │   ├── modify_content.php
+│   │   └── save_to_file.php
+│   ├── 05-practical-patterns/
+│   │   ├── callbacks.php
+│   │   ├── form_extraction.php
+│   │   ├── html_sanitization.php
+│   │   └── table_extraction.php
+│   └── 06-configuration/
+│       ├── error_handling.php
+│       └── settings.php
 │
 ├── app/                       # Demo web app (visual DOM tree viewer)
 │   ├── index.php
