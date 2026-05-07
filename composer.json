@@ -1,8 +1,11 @@
 {
-	"name": "shark/simple_html_dom",
-	"description": "Simple HTML DOM package.",
-	"keywords": ["dom", "php dom"],
-	"homepage": "http://simplehtmldom.sourceforge.net/",
+	"name": "mistralys/simple_html_dom",
+    "replace": {
+        "shark/simple_html_dom": "self.version"
+    },
+	"description": "A fast, forgiving HTML parser for PHP.",
+	"keywords": ["dom", "php", "html", "parser"],
+	"homepage": "https://github.com/Mistralys/simple_html_dom",
 	"type": "library",
 	"license": "MIT",
 	"require": {
@@ -14,7 +17,12 @@
 			"name": "S.C. Chen",
 			"email": "me578022@gmail.com",
 			"homepage": "http://simplehtmldom.sourceforge.net/"
-		}
+		},
+        {
+            "name": "Sebastian Mordziol",
+            "email": "s.mordziol@mistralys.eu",
+            "homepage": "https://github.com/Mistralys/simple_html_dom"
+        }
 	],
 	"autoload": {
 		"psr-4": {
