@@ -4,9 +4,9 @@
 	"keywords": ["dom", "php dom"],
 	"homepage": "http://simplehtmldom.sourceforge.net/",
 	"type": "library",
-	"version": "1.5",
+	"license": "MIT",
 	"require": {
-		"php": ">=5.2.4",
+		"php": "^8.4",
 		"ext-mbstring": "*"
 	},
 	"authors": [
@@ -17,7 +17,32 @@
 		}
 	],
 	"autoload": {
-		"classmap": ["simple_html_dom.php"],
-		"files": ["simple_html_dom.php"]
+		"psr-4": {
+			"SimpleHtmlDom\\": "src/SimpleHtmlDom/"
+		},
+		"files": [
+            "src/simple_html_dom.php"
+        ]
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^12.0",
+		"phpstan/phpstan": "^2.1",
+		"phpstan/phpstan-phpunit": "^2.0",
+		"roave/security-advisories": "dev-latest"
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Tests\\": "tests/"
+		}
+	},
+	"scripts": {
+		"analyze": "php vendor/bin/phpstan analyse --configuration phpstan.neon --memory-limit=900M",
+		"analyze-save": "php vendor/bin/phpstan analyse --configuration phpstan.neon --memory-limit=900M > phpstan-result.txt || true",
+		"analyze-clear": "php vendor/bin/phpstan clear-result-cache",
+		"test": "php vendor/bin/phpunit",
+		"test-file": "php vendor/bin/phpunit --no-progress",
+		"test-suite": "php vendor/bin/phpunit --no-progress --testsuite",
+		"test-filter": "php vendor/bin/phpunit --no-progress --filter",
+		"test-group": "php vendor/bin/phpunit --no-progress --group"
 	}
 }

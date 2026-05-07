@@ -1,35 +1,80 @@
-## Description
+# PHP Simple HTML DOM Parser
 
-This is a fork of samac's package for some quality of life enhancements.
+A fast, forgiving HTML parser for PHP 8.4+ that lets you find and manipulate HTML elements using CSS-like selectors — no ext-dom required.
 
-Original package: https://github.com/samacs/simple_html_dom
+## ✨ Features
 
-## Features
+- **CSS-like selectors** — find elements by tag, `#id`, `.class`, `[attribute]`, and more
+- **Two APIs, one engine** — use procedural functions (`str_get_html`, `file_get_html`) or the namespaced OOP interface (`Parser`, `Node`)
+- **Forgiving parser** — handles messy, real-world HTML without choking
+- **Read and modify** — change attributes, inner/outer HTML, and serialize back to string or file
+- **Tree traversal** — navigate parents, children, and siblings
+- **Callbacks** — hook into serialization with per-node callback functions
+- **Charset conversion** — automatic detection and conversion via `ext-mbstring`
+- **Configurable** — adjust max file size, encoding, and parser behavior at runtime
+- **Fully backward compatible** — legacy `simple_html_dom` code works without changes
 
-This package adds the following things:
+## 📋 Requirements
 
-  * Entirely backwards compatible
-  * Possibility to access error messages when loading a file or string fails
-  * Possibility to set the maximum file size setting after loading
+- PHP 8.4+
+- `ext-mbstring`
 
-## Usage
+## 🚀 Quick Start
 
-To use this fork, use the following settings in your `composer.json`:
+Install via Composer:
 
-```json
-"repositories":[
-    {
-        "type":"vcs",
-        "url":"https://github.com/Mistralys/simple_html_dom.git"
-    }
-],
-"require": {
-    "shark/simple_html_dom" : "dev-master"
-}
+```bash
+composer require shark/simple_html_dom
 ```
 
-## Revamped package
+> **Note:** If the package is not available on Packagist, add the repository to your `composer.json`:
+> ```json
+> "repositories": [{ "type": "vcs", "url": "https://github.com/Mistralys/simple_html_dom.git" }]
+> ```
 
-There is a revamped package from voku which improves the library a lot, but where the API has changed:
+Parse HTML and find elements:
 
-https://github.com/voku/simple_html_dom
+```php
+use SimpleHtmlDom\Parser;
+
+$html = new Parser('<ul><li class="active">One</li><li>Two</li></ul>');
+
+// Find by CSS selector
+$active = $html->find('li.active', 0);
+echo $active->plaintext; // "One"
+
+// Modify and output
+$active->class = 'done';
+echo $html->save(); // <ul><li class="done">One</li><li>Two</li></ul>
+```
+
+Or use the procedural API:
+
+```php
+$html = str_get_html('<p>Hello <b>World</b></p>');
+echo $html->find('b', 0)->plaintext; // "World"
+```
+
+## 📖 Learn More
+
+| Resource | Description |
+|---|---|
+| **[Manual](manual/README.md)** | Full documentation — 14 guides covering selectors, DOM traversal, modification, configuration, and more |
+| **[Examples](examples/README.md)** | 16 runnable PHP scripts organized by topic |
+| **[Changelog](changelog.md)** | Version history and recent changes |
+
+### Development
+
+```bash
+composer install       # Install dev dependencies
+composer test          # Run the full test suite (PHPUnit 12.x)
+composer analyze       # Run static analysis (PHPStan Level 6)
+```
+
+## 📜 License
+
+[MIT](LICENSE)
+
+## 🔗 Origin
+
+Fork of [samacs/simple_html_dom](https://github.com/samacs/simple_html_dom), originally by S.C. Chen ([SourceForge](http://simplehtmldom.sourceforge.net/)).
